@@ -1,1 +1,4 @@
 imgcap
+Datasets
+__pycache__
+*.pyc
