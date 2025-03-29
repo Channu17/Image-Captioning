@@ -3,3 +3,7 @@ keras
 numpy
 kaggle
 pillow
+fastapi
+streamlit
+uvicorn
+multipart
