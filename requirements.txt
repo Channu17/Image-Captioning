@@ -6,4 +6,4 @@ pillow
 fastapi
 streamlit
 uvicorn
-multipart
+python-multipart

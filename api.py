@@ -28,41 +28,48 @@ def idx_to_word(integer, tokenizer):
             return word
     return None
 
-def predict_caption(model, image, tokenizer, max_length):
-    image = np.expand_dims(image, axis = 0)
-    
+def predict_caption(model, features, tokenizer, max_length):
     in_text = 'startseq'
     for i in range(max_length):
-        sequence = tokenizer.text_to_sequences([in_text])[0]
-        sequence = pad_sequences([seqeuence], maxlen = max_length, padding = "post")
+        sequence = tokenizer.texts_to_sequences([in_text])[0]
+        sequence = pad_sequences([sequence], maxlen = max_length, padding = "post")
         
-        yhat = model.predict([image, sequence], verbose = 0)
+        yhat = model.predict([features, sequence], verbose = 0)
         yhat = np.argmax(yhat)
         
         word = idx_to_word(yhat, tokenizer)
-        if word in None:
+        if word is None:
             break
         in_text += " " +word
         if word == 'endseq':
             break
     return in_text
 
-def preprocess_iamge(image):
-    image= img_to_array(image)
-    image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
+def preprocess_image(image):
+    image = image.resize((224, 224))  
+    image = img_to_array(image)
+    image = np.expand_dims(image, axis=0)  # Add batch dimension
     image = preprocess_input(image)
-    features = feature_extractor.predict(image, verbose = 0)
-    return image
 
-@api.get("/model")
+   # For debugging, add this to your preprocess_image function
+    features = feature_extractor.predict(image, verbose=0)
+    print("Feature shape before reshape:", features.shape)
+    features = features.reshape(1, -1)
+    print("Feature shape after reshape:", features.shape)
+    return features
+
+
+@api.post("/model")
 async def captioning(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        image = Image.open(io.bytesIO(contents))
-        image = preprocess_image(image)
-        max_length = 34
-        caption = predict_caption(model, image, tokenizer, max_length)
+        image = Image.open(io.BytesIO(contents))
+        features = preprocess_image(image)
+        max_length = 35
+        caption = predict_caption(model, features, tokenizer, max_length)
+        caption = caption.split()
+        caption = " ".join(caption[1:-1])
         return {"caption":caption}
     except Exception as e:
-        return HTTPExecption(status_code = 500, detail = str(e))
+        return HTTPException(status_code = 500, detail = str(e))
     
