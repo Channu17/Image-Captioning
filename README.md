@@ -144,3 +144,4 @@ The image captioning model consists of an encoder-decoder architecture:
 
 
 This README provides a comprehensive overview of the Image Captioning project.
+**APP** : https://image-captioning-17.streamlit.app/
